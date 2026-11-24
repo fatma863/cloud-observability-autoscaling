@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  api-service:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: telemetry-api-service
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.50.1
+    container_name: telemetry-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    depends_on:
+      - api-service
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: telemetry-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  locust:
+    image: locustio/locust:2.24.0
+    container_name: telemetry-traffic-generator
+    ports:
+      - "8089:8089"
+    volumes:
+      - ./load_testing:/mnt/locust:ro
+    command: -f /mnt/locust/locustfile.py --host http://api-service:8000
+    depends_on:
+      - api-service
+    restart: unless-stopped
+

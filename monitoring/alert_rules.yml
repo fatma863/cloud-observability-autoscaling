@@ -1,0 +1,30 @@
+groups:
+  - name: cloud_service_alerts
+    rules:
+      - alert: HighRequestLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[1m])) by (le, endpoint)) > 0.5
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "High P95 latency detected on {{ $labels.endpoint }}"
+          description: "P95 latency is exceeding 500ms for more than 30 seconds."
+
+      - alert: HighHttpErrorRate
+        expr: sum(rate(http_requests_total{status_code=~"5.."}[1m])) / sum(rate(http_requests_total[1m])) * 100 > 5
+        for: 20s
+        labels:
+          severity: critical
+        annotations:
+          summary: "HTTP 5xx Error Rate > 5%"
+          description: "Server error rate has crossed 5% over the last minute."
+
+      - alert: HighSimulatedCpuUtilization
+        expr: system_simulated_cpu_utilization_ratio > 0.8
+        for: 15s
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU threshold breached (>80%)"
+          description: "System CPU load is above 80%, recommending horizontal scaling trigger."
+

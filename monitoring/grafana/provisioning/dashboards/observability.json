@@ -1,0 +1,83 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "id": 1,
+      "title": "HTTP Request Throughput (Req/sec)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total[30s])) by (endpoint, status_code)",
+          "legendFormat": "{{endpoint}} - {{status_code}}"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "id": 2,
+      "title": "P95 & P99 Latency (Seconds)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[30s])) by (le))",
+          "legendFormat": "P95 Latency"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[30s])) by (le))",
+          "legendFormat": "P99 Latency"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "id": 3,
+      "title": "Active In-Flight Connections",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "http_active_connections",
+          "legendFormat": "Active Connections"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "id": 4,
+      "title": "Simulated CPU Load Ratio (Auto-Scaling Trigger)",
+      "type": "gauge",
+      "targets": [
+        {
+          "expr": "system_simulated_cpu_utilization_ratio",
+          "legendFormat": "CPU Load"
+        }
+      ]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["cloud", "observability", "prometheus"],
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": ["5s", "10s", "30s", "1m"]
+  },
+  "title": "Cloud SRE Observability & Auto-Scaling Dashboard",
+  "uid": "cloud-telemetry-01"
+}
+
